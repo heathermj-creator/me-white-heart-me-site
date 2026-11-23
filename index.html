@@ -170,6 +170,26 @@
       .checkout-card .fine { font-size: 0.88rem; color: var(--ink-soft); margin-top: 12px; }
       .checkout-card .btn { margin-top: 16px; width: 100%; }
       .checkout-card .secure-note { margin-top: 12px; font-weight: 600; font-size: 0.95rem; color: var(--ink-soft); }
+      .promo-label { display: block; font-weight: 700; font-size: 0.95rem; margin-top: 18px; margin-bottom: 6px; }
+      .promo-row { display: flex; gap: 8px; }
+      .promo-row input {
+        flex: 1 1 auto; min-width: 0; padding: 9px 14px; border-radius: 999px;
+        border: 1.5px solid var(--line); background: var(--bg); color: var(--ink);
+        font-family: inherit; font-weight: 600; font-size: 0.98rem;
+      }
+      .promo-row input:focus { outline: 2px solid var(--rose); outline-offset: 1px; }
+      .promo-apply {
+        flex: 0 0 auto; padding: 9px 20px; border-radius: 999px; cursor: pointer;
+        background: transparent; color: var(--rose-deep); border: 1.5px solid var(--rose);
+        font-family: inherit; font-weight: 700; font-size: 0.95rem;
+      }
+      .promo-apply:hover { background: var(--rose-tint); }
+      .promo-msg { margin-top: 10px; font-size: 0.95rem; font-weight: 600; min-height: 1.5rem; }
+      .promo-msg.ok { color: var(--sage); }
+      .promo-msg.err { color: var(--rose-deep); }
+      .price-summary { margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: var(--bg-soft); font-size: 0.98rem; }
+      .price-summary .was { text-decoration: line-through; color: var(--ink-soft); }
+      .price-summary strong { color: var(--rose-deep); }
 
       /* ---------- Footer ---------- */
       footer { margin-top: 56px; border-top: 1px solid var(--line); padding: 26px 0 40px; }
@@ -324,7 +344,16 @@
               <div class="checkout-card">
                 <h3>Subscribe with PayPal</h3>
                 <p>Tap the button below to start your Bloom Club subscription — $2.99/month, and you can cancel in PayPal whenever you like.</p>
-                <a class="btn btn-rose" href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick-subscriptions&business=Heathermj0587@gmail.com&item_name=ME%20%E2%99%A1%20ME%20Bloom%20Club&a3=2.99&p3=1&t3=M&src=1&sra=1&currency_code=USD" target="_blank" rel="noopener">Join Bloom Club — $2.99/month</a>
+                <label class="promo-label" for="promo-code">Have a promo code?</label>
+                <div class="promo-row">
+                  <input type="text" id="promo-code" placeholder="Enter code" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+                  <button type="button" class="promo-apply" id="promo-apply">Apply</button>
+                </div>
+                <p class="promo-msg" id="promo-msg" role="status" aria-live="polite"></p>
+                <div class="price-summary" id="price-summary">
+                  <p>First month: <strong>$2.99</strong> · then $2.99/month</p>
+                </div>
+                <a class="btn btn-rose" id="subscribe-btn" href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick-subscriptions&business=Heathermj0587@gmail.com&item_name=ME%20%E2%99%A1%20ME%20Bloom%20Club&a3=2.99&p3=1&t3=M&src=1&sra=1&currency_code=USD" target="_blank" rel="noopener">Join Bloom Club — $2.99/month</a>
                 <p class="secure-note">You'll check out securely on PayPal's site.</p>
                 <p class="fine">Your subscription is managed in your PayPal account, under Payments → Manage automatic payments.</p>
               </div>
@@ -393,6 +422,40 @@
       document.getElementById("prompt-next").addEventListener("click", function () {
         promptIdx = (promptIdx + 1) % PROMPTS.length;
         renderPrompt();
+      });
+
+      /* ---------- Bloom Club promo code (BLOOM1: first month $1, then $2.99/month) ---------- */
+      const SUBSCRIBE_STANDARD = "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick-subscriptions&business=Heathermj0587@gmail.com&item_name=ME%20%E2%99%A1%20ME%20Bloom%20Club&a3=2.99&p3=1&t3=M&src=1&sra=1&currency_code=USD";
+      const SUBSCRIBE_BLOOM1 = "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick-subscriptions&business=Heathermj0587@gmail.com&item_name=ME%20%E2%99%A1%20ME%20Bloom%20Club&a1=1.00&p1=1&t1=M&a3=2.99&p3=1&t3=M&src=1&sra=1&currency_code=USD";
+      const promoInput = document.getElementById("promo-code");
+      const promoMsg = document.getElementById("promo-msg");
+      const priceSummary = document.getElementById("price-summary");
+      const subscribeBtn = document.getElementById("subscribe-btn");
+      function applyPromo() {
+        const code = promoInput.value.trim().toUpperCase();
+        if (code === "BLOOM1") {
+          subscribeBtn.href = SUBSCRIBE_BLOOM1;
+          subscribeBtn.textContent = "Join Bloom Club — $1 first month";
+          priceSummary.innerHTML = "<p>First month: <span class=\"was\">$2.99</span> <strong>$1.00</strong> with code BLOOM1 · then $2.99/month</p>";
+          promoMsg.textContent = "Code applied — your first month is $1.00 instead of $2.99, then $2.99/month after that.";
+          promoMsg.className = "promo-msg ok";
+        } else if (code === "") {
+          subscribeBtn.href = SUBSCRIBE_STANDARD;
+          subscribeBtn.textContent = "Join Bloom Club — $2.99/month";
+          priceSummary.innerHTML = "<p>First month: <strong>$2.99</strong> · then $2.99/month</p>";
+          promoMsg.textContent = "";
+          promoMsg.className = "promo-msg";
+        } else {
+          subscribeBtn.href = SUBSCRIBE_STANDARD;
+          subscribeBtn.textContent = "Join Bloom Club — $2.99/month";
+          priceSummary.innerHTML = "<p>First month: <strong>$2.99</strong> · then $2.99/month</p>";
+          promoMsg.textContent = "That code doesn't look right — check it and try again. The regular $2.99/month price still applies.";
+          promoMsg.className = "promo-msg err";
+        }
+      }
+      document.getElementById("promo-apply").addEventListener("click", applyPromo);
+      promoInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); applyPromo(); }
       });
 
       /* ---------- Mood check-in (in-memory only; resets on reload) ---------- */
